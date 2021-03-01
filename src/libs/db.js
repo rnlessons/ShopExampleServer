@@ -2,8 +2,8 @@ import { encPassword } from './auth';
 import faker from 'faker';
 
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(':memory:');
-// const db = new sqlite3.Database('db.sqlite3');
+// const db = new sqlite3.Database(':memory:');
+const db = new sqlite3.Database('db.sqlite3');
 
 async function initUser(numOfUser) {
   await run(
@@ -140,9 +140,11 @@ async function initOrder() {
 
 export function init() {
   db.serialize(async function () {
-    await initUser(100);
-    await initProduct(10);
-    await initOrder();
+    try {
+      await initUser(100);
+      await initProduct(10);
+      await initOrder();
+    } catch (e) {}
   });
 
   // db.close();
