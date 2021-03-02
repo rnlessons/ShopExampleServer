@@ -8,6 +8,7 @@ import 'regenerator-runtime/runtime';
 import app from './app';
 const debug = require('debug')('server:server');
 const http = require('http');
+const ip = require('ip');
 
 /**
  * Get port from environment and store in Express.
@@ -30,7 +31,10 @@ server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
-console.log(`server run on http://localhost:${port}`);
+console.log(
+  `server run on http://localhost:${port} or http://${ip.address()}:${port}`,
+);
+
 /**
  * Normalize a port into a number, string, or false.
  */
