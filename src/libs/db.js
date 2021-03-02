@@ -57,13 +57,14 @@ async function initUser(numOfUser) {
 
 async function initProduct(numOfProduct) {
   await run(
-    'CREATE TABLE product(color TEXT, productName TEXT, price INTEGER, productMaterial TEXT, product TEXT, productDescription TEXT, createdAt DATE, updatedAt DATE)',
+    'CREATE TABLE product(color TEXT, imageUrl Text, productName TEXT, price INTEGER, productMaterial TEXT, product TEXT, productDescription TEXT, createdAt DATE, updatedAt DATE)',
   );
   const stmt = db.prepare(
-    'INSERT INTO product(color, productName, price, productMaterial, product, productDescription, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO product(color, imageUrl, productName, price, productMaterial, product, productDescription, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
   );
   for (let i = 0; i < numOfProduct; i++) {
     const color = faker.commerce.color();
+    const imageUrl = faker.image.imageUrl();
     const productName = faker.commerce.productName();
     const price = faker.commerce.price() * 1000;
     const productMaterial = faker.commerce.productMaterial();
@@ -74,6 +75,7 @@ async function initProduct(numOfProduct) {
 
     stmt.run([
       color,
+      imageUrl,
       productName,
       price,
       productMaterial,
@@ -87,7 +89,7 @@ async function initProduct(numOfProduct) {
   stmt.finalize();
 
   // db.each(
-  //   'SELECT rowid AS id, color, productName, price, productMaterial, product, productDescription, createdAt, updatedAt FROM product',
+  //   'SELECT rowid AS id, color, imageUrl, productName, price, productMaterial, product, productDescription, createdAt, updatedAt FROM product',
   //   function (err, row) {
   //     console.log(row);
   //   },
@@ -142,7 +144,7 @@ export function init() {
   db.serialize(async function () {
     try {
       await initUser(100);
-      await initProduct(10);
+      await initProduct(10000);
       await initOrder();
     } catch (e) {}
   });

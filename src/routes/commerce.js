@@ -7,20 +7,22 @@ import APIError from '../libs/error';
 
 /* GET users listing. */
 router.get('/products', async function (req, res, next) {
-  const { limit, offset } = req.query;
+  const { limit, offset, isNew = false } = req.query;
 
+  console.log(offset);
+  const query = `
+    SELECT 
+      rowid AS id, color, imageUrl, productName, price, productMaterial, product, productDescription, createdAt, updatedAt 
+    FROM product ${
+      offset ? (isNew ? 'WHERE id > $offset' : 'WHERE id < $offset') : ''
+    } ORDER BY id DESC LIMIT $limit
+  `;
+  console.log(query);
   try {
-    const response = await all(
-      `
-        SELECT 
-          rowid AS id, color, productName, price, productMaterial, product, productDescription, createdAt, updatedAt 
-        FROM product ORDER BY id DESC LIMIT $limit OFFSET $offset
-        `,
-      {
-        $limit: limit,
-        $offset: offset,
-      },
-    );
+    const response = await all(query, {
+      $limit: limit,
+      $offset: offset,
+    });
     res.json({
       success: true,
       rows: response,
@@ -35,7 +37,7 @@ router.get('/product/:id', async function (req, res, next) {
 
   try {
     const response = await get(
-      'SELECT rowid AS id, color, productName, price, productMaterial, product, productDescription, createdAt, updatedAt FROM product WHERE rowid = $id',
+      'SELECT rowid AS id, color, imageUrl, productName, price, productMaterial, product, productDescription, createdAt, updatedAt FROM product WHERE rowid = $id',
       {
         $id: id,
       },
