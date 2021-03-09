@@ -68,7 +68,7 @@ router.post(
           address,
           quantity,
           price * quantity,
-          new Date().toUTCString(),
+          new Date().toISOString(),
         ],
       );
 
@@ -115,6 +115,36 @@ router.get(
       const row = await get(
         'SELECT rowid as id, * FROM product_order WHERE rowid = ?',
         [id],
+      );
+
+      if (!row) {
+        throw new APIError(0, 'no item', 200);
+      }
+
+      res.json({
+        success: true,
+        row,
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+);
+
+router.get(
+  '/orders',
+  jwt({ secret, algorithms: ['HS256'] }),
+  async function (req, res, next) {
+    if (!req.user.id) {
+      return res.sendStatus(401);
+    }
+
+    const { id } = req.params;
+
+    try {
+      const row = await all(
+        'SELECT rowid as id, * FROM product_order WHERE userId = ? ORDER BY id DESC',
+        [req.user.id],
       );
 
       if (!row) {
