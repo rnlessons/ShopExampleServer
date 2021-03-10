@@ -1,4 +1,5 @@
 import jwt from 'express-jwt';
+import moment from 'moment';
 import express from 'express';
 const router = express.Router();
 import secret from '../secret';
@@ -110,11 +111,26 @@ router.get(
   jwt({ secret, algorithms: ['HS256'] }),
   async function (req, res, next) {
     const { id } = req.params;
+    const { id: userId } = req.user;
 
     try {
       const row = await get(
-        'SELECT rowid as id, * FROM product_order WHERE rowid = ?',
-        [id],
+        `
+          SELECT 
+            a.rowid as id,
+            a.userId, a.productId, a.zipCode, a.address, a.quantity, a.totalPrice, a.createdAt, a.updatedAt,
+            b.color,
+            b.imageUrl,
+            b.productName,
+            b.price,
+            b.productMaterial,
+            b.product,
+            b.productDescription
+          FROM product_order a
+          LEFT OUTER JOIN product b ON a.productId = b.rowid
+          WHERE a.rowid = ? AND a.userId = ?
+        `,
+        [id, userId],
       );
 
       if (!row) {
@@ -138,22 +154,37 @@ router.get(
     if (!req.user.id) {
       return res.sendStatus(401);
     }
-
-    const { id } = req.params;
+    const defaultMonth = moment().format('YYYY-MM');
+    const { month = defaultMonth } = req.query;
 
     try {
-      const row = await all(
-        'SELECT rowid as id, * FROM product_order WHERE userId = ? ORDER BY id DESC',
-        [req.user.id],
+      const rows = await all(
+        `
+          SELECT 
+            a.rowid as id,
+            a.userId, a.productId, a.zipCode, a.address, a.quantity, a.totalPrice, a.createdAt, a.updatedAt,
+            b.color,
+            b.imageUrl,
+            b.productName,
+            b.price,
+            b.productMaterial,
+            b.product,
+            b.productDescription
+          FROM product_order a
+          LEFT OUTER JOIN product b ON a.productId = b.rowid
+          WHERE userId = ? AND strftime('%Y-%m', a.createdAt) = ?
+          ORDER BY id DESC
+        `,
+        [req.user.id, month],
       );
 
-      if (!row) {
+      if (!rows) {
         throw new APIError(0, 'no item', 200);
       }
 
       res.json({
         success: true,
-        row,
+        rows,
       });
     } catch (e) {
       next(e);
